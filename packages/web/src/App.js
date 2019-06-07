@@ -10,7 +10,10 @@ function App() {
     <Mutation
       mutation={gql`
         mutation CreateBook($book: CreateBookInput!) {
-          createBook(book: $book)
+          createBook(book: $book) {
+            name
+            message
+          }
         }
       `}
     >

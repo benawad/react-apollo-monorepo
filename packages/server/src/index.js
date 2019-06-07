@@ -2,6 +2,11 @@ const { ApolloServer, gql } = require("apollo-server");
 const { createBookSchema } = require("@bob/common");
 
 const typeDefs = gql`
+  type FieldError {
+    name: String
+    message: String
+  }
+
   input CreateBookInput {
     title: String
     pages: Int
@@ -13,7 +18,7 @@ const typeDefs = gql`
   }
 
   type Mutation {
-    createBook(book: CreateBookInput): Boolean
+    createBook(book: CreateBookInput): [FieldError]
   }
 `;
 
@@ -24,13 +29,20 @@ const resolvers = {
   Mutation: {
     createBook: async (_, { book }) => {
       try {
-        await createBookSchema.validate(book);
+        await createBookSchema.validate(book, { abortEarly: false });
       } catch (err) {
         console.log(err);
-        return false;
+        const errors = [];
+        err.inner.forEach(e => {
+          errors.push({
+            name: e.path,
+            message: e.message
+          });
+        });
+        return errors;
       }
 
-      return true;
+      return [];
     }
   }
 };
